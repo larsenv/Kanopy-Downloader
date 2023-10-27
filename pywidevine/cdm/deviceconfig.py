@@ -53,4 +53,4 @@ class DeviceConfig:
             self.device_vmp_blob_filename = os.path.join(os.path.dirname(__file__), FILES_FOLDER, device['name'], 'device_vmp_blob')
 
     def __repr__(self):
-        return "DeviceConfig(name={}, description={}, security_level={}, session_id_type={}, private_key_available={}, vmp={})".format(self.device_name, self.description, self.security_level, self.session_id_type, self.private_key_available, self.vmp)
+        return f"DeviceConfig(name={self.device_name}, description={self.description}, security_level={self.security_level}, session_id_type={self.session_id_type}, private_key_available={self.private_key_available}, vmp={self.vmp})"

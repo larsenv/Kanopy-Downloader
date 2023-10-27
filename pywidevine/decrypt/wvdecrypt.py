@@ -17,7 +17,7 @@ class WvDecrypt(object):
 
         def check_pssh(pssh_b64):
             pssh = base64.b64decode(pssh_b64)
-            if not pssh[12:28] == bytes(self.WV_SYSTEM_ID):
+            if pssh[12:28] != bytes(self.WV_SYSTEM_ID):
                 new_pssh = bytearray([0,0,0])
                 new_pssh.append(32+len(pssh))
                 new_pssh[4:] = bytearray(b'pssh')
@@ -38,8 +38,7 @@ class WvDecrypt(object):
         
     
     def start_process(self):
-        keysR = self.cdm.get_keys(self.session)
-        return keysR
+        return self.cdm.get_keys(self.session)
 
     def get_challenge(self):
         return self.cdm.get_license_request(self.session)

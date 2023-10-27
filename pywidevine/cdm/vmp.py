@@ -7,13 +7,13 @@ except ImportError:
     shift = 0
     while True:
       b = buffer[pos]
-      pos += 1  
+      pos += 1
       result |= ((b & 0x7F) << shift)
       if not (b & 0x80): 
          return (result, pos)
       shift += 7
       if shift > limit: 
-         raise Exception("integer too large, shift: {}".format(shift))
+        raise Exception(f"integer too large, shift: {shift}")
   _di = LEB128_decode
 
 
@@ -64,14 +64,14 @@ class TaggedReader(VariableReader):
     return (self.read_int(), self.read_bytes())
 
   def read_all_tags(self, max_tag=3):
-      tags = {}
-      while (not self.is_end()):
-        (tag, bytes) = self.read_tag()
-        if (tag > max_tag):
-           raise IndexError("tag out of bound: got {}, max {}".format(tag, max_tag))
+    tags = {}
+    while (not self.is_end()):
+      (tag, bytes) = self.read_tag()
+      if (tag > max_tag):
+        raise IndexError(f"tag out of bound: got {tag}, max {max_tag}")
 
-        tags[tag] = bytes
-      return tags
+      tags[tag] = bytes
+    return tags
 
 class WideVineSignatureReader(FromFileMixin):
   """Parses a widevine .sig signature file."""
@@ -81,20 +81,20 @@ class WideVineSignatureReader(FromFileMixin):
   ISMAINEXE_TAG = 3
 
   def __init__(self, buf):
-      reader = TaggedReader(buf)
-      self.version = reader.read_int()
-      if (self.version != 0):
-         raise Exception("Unsupported signature format version {}".format(self.version))
-      self.tags = reader.read_all_tags()
+    reader = TaggedReader(buf)
+    self.version = reader.read_int()
+    if (self.version != 0):
+      raise Exception(f"Unsupported signature format version {self.version}")
+    self.tags = reader.read_all_tags()
 
-      self.signer = self.tags[self.SIGNER_TAG]
-      self.signature = self.tags[self.SIGNATURE_TAG]
+    self.signer = self.tags[self.SIGNER_TAG]
+    self.signature = self.tags[self.SIGNATURE_TAG]
 
-      extra = self.tags[self.ISMAINEXE_TAG]
-      if (len(extra) != 1 or (extra[0] > 1)):
-         raise Exception("Unexpected 'ismainexe' field value (not '\\x00' or '\\x01'), please check: {0}".format(extra))
-      
-      self.mainexe = bool(extra[0])
+    extra = self.tags[self.ISMAINEXE_TAG]
+    if (len(extra) != 1 or (extra[0] > 1)):
+       raise Exception("Unexpected 'ismainexe' field value (not '\\x00' or '\\x01'), please check: {0}".format(extra))
+
+    self.mainexe = bool(extra[0])
 
   @classmethod
   def get_tags(cls, filename):

@@ -9,6 +9,6 @@ class Key:
 
     def __repr__(self):
         if self.type == "OPERATOR_SESSION":
-           return "key(kid={}, type={}, key={}, permissions={})".format(self.kid, self.type, binascii.hexlify(self.key), self.permissions)
+            return f"key(kid={self.kid}, type={self.type}, key={binascii.hexlify(self.key)}, permissions={self.permissions})"
         else:
-           return "key(kid={}, type={}, key={})".format(self.kid, self.type, binascii.hexlify(self.key))
+            return f"key(kid={self.kid}, type={self.type}, key={binascii.hexlify(self.key)})"
