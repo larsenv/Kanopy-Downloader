@@ -19,12 +19,10 @@ clr_init(autoreset=True)
 video_url = sys.argv[1]
 Kanopy_ID = "/".join(video_url.split("/")[:7]).split("/")[-1]
 
-params = {}
-
-params["domainId"] = Header.json_data["domainId"]
+params = {"domainId": Header.json_data["domainId"]}
 
 response = requests.get(
-    "https://www.kanopy.com/kapi/videos/" + Kanopy_ID + "/items",
+    f"https://www.kanopy.com/kapi/videos/{Kanopy_ID}/items",
     params=params,
     cookies=Header.cookies,
     headers=Header.headers,
@@ -34,15 +32,13 @@ try:
     lists = response.json()["list"]
 except:
     response = requests.get(
-        "https://www.kanopy.com/kapi/videos/" + Kanopy_ID,
+        f"https://www.kanopy.com/kapi/videos/{Kanopy_ID}",
         params=params,
         cookies=Header.cookies,
         headers=Header.headers,
     )
 
-    lists = {}
-
-    lists["list"] = [{}]
+    lists = {"list": [{}]}
 
     lists["list"][0]["video"] = response.json()["video"]
 
@@ -113,17 +109,14 @@ for video in lists:
         license_b64 = base64.b64encode(license_decoded)
         # print(license_b64)
         wvdecrypt.update_license(license_b64)
-        keys = wvdecrypt.start_process()
-
-        return keys
+        return wvdecrypt.start_process()
 
     def keysOnly(keys):
         table = PrettyTable()
         table.field_names = ["ID", "KID", "KEY"]
         for key in keys:
             if key.type == "CONTENT":
-                key = "{}:{}".format(key.kid.hex(), key.key.hex())
-                return key
+                return f"{key.kid.hex()}:{key.key.hex()}"
 
     if drm:
         KEYS = do_decrypt(pssh=pssh, licurl=licurl)
