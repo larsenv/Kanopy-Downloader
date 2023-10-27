@@ -1,4 +1,5 @@
 colorama
 prettytable
+protobuf==3.20.0
 requests
 xmltodict
