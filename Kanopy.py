@@ -1,18 +1,11 @@
-import base64, requests, re, os, colorama
-from prettytable import PrettyTable
-from colorama import Fore as clr
+import requests, re, os
 from colorama import init as clr_init
-from pywidevine.decrypt.wvdecrypt import WvDecrypt
-from fractions import Fraction
-import xmltodict
+import requests
 import subprocess
-import json
 import Header
 import os
-import argparse
 import sys
 import glob
-from typing import DefaultDict
 
 clr_init(autoreset=True)
 
@@ -77,7 +70,6 @@ for video in lists:
     if drm:
         try:
             drmLicenseId = response.json()["manifests"][2]["studioDrm"]["drmLicenseId"]
-            # print(customdata)
             licurl = "https://kcms.kanopy.com/api/v1/playback/widevine_license"
             lic_headers = {
                 "Klicenseid": drmLicenseId,
@@ -85,7 +77,6 @@ for video in lists:
 
         except:
             customdata = response.json()["manifests"][1]["kanopyDrm"]["authXml"]
-            # print(customdata)
             licurl = "https://wv-keyos.licensekeyserver.com/"
             lic_headers = {
                 "customdata": customdata,
@@ -96,27 +87,34 @@ for video in lists:
         print("\nPSSHL: " + pssh)
 
     def do_decrypt(pssh, licurl):
-        wvdecrypt = WvDecrypt(pssh)
-        chal = wvdecrypt.get_challenge()
-        # print(chal)
-        resp = requests.post(
-            url=licurl,
-            data=chal,
-            headers=lic_headers,
-        )
-        # print(resp.content)
-        license_decoded = resp.content
-        license_b64 = base64.b64encode(license_decoded)
-        # print(license_b64)
-        wvdecrypt.update_license(license_b64)
-        return wvdecrypt.start_process()
+        try:
+            header = (
+                'license: "https://kcms.kanopy.com/api/v1/playback/widevine_license"\nKlicenseid: "'
+                + drmLicenseId
+                + '"'
+            )
+            licenseurl = "https://kcms.kanopy.com/api/v1/playback/widevine_license"
+        except:
+            header = (
+                'license: "https://wv-keyos.licensekeyserver.com/"\ncustomdata: "'
+                + customdata
+                + '"'
+            )
+            licenseurl = "https://wv-keyos.licensekeyserver.com/"
+
+        json_data = {
+            "license": licenseurl,
+            "headers": header + '\npssh: "' + pssh + '"\nbuildInfo: ""\nproxy: ""',
+            "pssh": pssh,
+            "buildInfo": "",
+            "proxy": "",
+            "cache": False,
+        }
+
+        return requests.post("https://cdrm-project.com/wv", json=json_data).content
 
     def keysOnly(keys):
-        table = PrettyTable()
-        table.field_names = ["ID", "KID", "KEY"]
-        for key in keys:
-            if key.type == "CONTENT":
-                return f"{key.kid.hex()}:{key.key.hex()}"
+        return keys.split(b"</li>")[0].split(b">")[-1].decode("utf-8")
 
     if drm:
         KEYS = do_decrypt(pssh=pssh, licurl=licurl)
@@ -131,7 +129,7 @@ for video in lists:
         subprocess.call(["mv", glob.glob("*[[]*[]].*.m4a")[0], "Input.m4a"])
         subprocess.call(
             [
-                "/Users/larsen/Documents/PBS/mp4decrypt",
+                "mp4decrypt",
                 "--key",
                 keys_widevine,
                 "Input.mp4",
@@ -140,7 +138,7 @@ for video in lists:
         )
         subprocess.call(
             [
-                "/Users/larsen/Documents/PBS/mp4decrypt",
+                "mp4decrypt",
                 "--key",
                 keys_widevine,
                 "Input.m4a",
