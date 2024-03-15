@@ -39,7 +39,7 @@ except:
 
 for video in lists:
     video_id = video["video"]["videoId"]
-    title = video["video"]["title"]
+    title = video["video"]["title"].replace("/", " ")
 
     if os.path.exists(title + ".mp4"):
         continue
