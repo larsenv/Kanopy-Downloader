@@ -1,6 +1,7 @@
+import platform
+import shutil
 import requests, re, os
 from colorama import init as clr_init
-import requests
 import subprocess
 import Header
 import os
@@ -89,49 +90,55 @@ for video in lists:
     def do_decrypt(pssh, licurl):
         try:
             header = (
-                'license: "https://kcms.kanopy.com/api/v1/playback/widevine_license"\nKlicenseid: "'
+                "{'license': 'https://kcms.kanopy.com/api/v1/playback/widevine_license', 'Klicenseid': '"
                 + drmLicenseId
-                + '"'
+                + "'}"
             )
             licenseurl = "https://kcms.kanopy.com/api/v1/playback/widevine_license"
         except:
             header = (
-                'license: "https://wv-keyos.licensekeyserver.com/"\ncustomdata: "'
+                "{'license': '"
+                + "https://wv-keyos.licensekeyserver.com/"
+                + "', 'customdata': '"
                 + customdata
-                + '"'
+                + "'}"
             )
             licenseurl = "https://wv-keyos.licensekeyserver.com/"
 
         json_data = {
-            "license": licenseurl,
-            "headers": header + '\npssh: "' + pssh + '"\nbuildInfo: ""\nproxy: ""',
-            "pssh": pssh,
-            "buildInfo": "",
-            "proxy": "",
-            "cache": False,
+            "PSSH": pssh,
+            "License URL": licenseurl,
+            "Headers": "{'license': '"
+            + "https://wv-keyos.licensekeyserver.com/"
+            + "', 'customdata': '"
+            + customdata
+            + "'}",
+            "JSON": "{}",
+            "Cookies": "{}",
+            "Data": "{}",
+            "Proxy": "",
         }
 
-        return requests.post("https://cdrm-project.com/wv", json=json_data).content
-
-    def keysOnly(keys):
-        return keys.split(b"</li>")[0].split(b">")[-1].decode("utf-8")
+        return requests.post("https://cdrm-project.com/", json=json_data).json()[
+            "Message"
+        ]
 
     if drm:
         KEYS = do_decrypt(pssh=pssh, licurl=licurl)
 
-        keys_widevine = keysOnly(KEYS)
-
     print("Downloading...")
 
     subprocess.call(["yt-dlp", "--allow-unplayable-formats", MPD])
+    if not os.path.exists("output"):
+        os.mkdir("output")
     if drm:
-        subprocess.call(["mv", glob.glob("*[[]*[]].*.mp4")[0], "Input.mp4"])
-        subprocess.call(["mv", glob.glob("*[[]*[]].*.m4a")[0], "Input.m4a"])
+        shutil.move(glob.glob("*.mp4")[0], "Input.mp4")
+        shutil.move(glob.glob("*.m4a")[0], "Input.m4a")
         subprocess.call(
             [
                 "mp4decrypt",
                 "--key",
-                keys_widevine,
+                KEYS,
                 "Input.mp4",
                 "Output.mp4",
             ]
@@ -140,7 +147,7 @@ for video in lists:
             [
                 "mp4decrypt",
                 "--key",
-                keys_widevine,
+                KEYS,
                 "Input.m4a",
                 "Output.m4a",
             ]
@@ -158,10 +165,11 @@ for video in lists:
             ]
         )
     else:
-        subprocess.call(["mv", glob.glob("*[[]*[]].mp4")[0], "Input.mp4"])
-        subprocess.call(["mv", "Input.mp4", title + ".mp4"])
+        shutil.move(glob.glob("*.mp4")[0], "Input.mp4")
+        shutil.move("Input.mp4", "output/" + title + ".mp4")
+
     if drm:
-        subprocess.call(["rm", "Input.mp4"])
-        subprocess.call(["rm", "Input.m4a"])
-        subprocess.call(["rm", "Output.mp4"])
-        subprocess.call(["rm", "Output.m4a"])
+        os.remove("Input.mp4")
+        os.remove("Input.m4a")
+        os.remove("Output.mp4")
+        os.remove("Output.m4a")
