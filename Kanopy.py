@@ -108,11 +108,7 @@ for video in lists:
         json_data = {
             "PSSH": pssh,
             "License URL": licenseurl,
-            "Headers": "{'license': '"
-            + "https://wv-keyos.licensekeyserver.com/"
-            + "', 'customdata': '"
-            + customdata
-            + "'}",
+            "Headers": header,
             "JSON": "{}",
             "Cookies": "{}",
             "Data": "{}",
@@ -165,8 +161,7 @@ for video in lists:
             ]
         )
     else:
-        shutil.move(glob.glob("*.mp4")[0], "Input.mp4")
-        shutil.move("Input.mp4", "output/" + title + ".mp4")
+        shutil.move(glob.glob("*.mp4")[0], "output/" + title + ".mp4")
 
     if drm:
         os.remove("Input.mp4")
