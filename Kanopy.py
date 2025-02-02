@@ -24,6 +24,7 @@ response = requests.get(
 
 try:
     lists = response.json()["list"]
+
 except:
     response = requests.get(
         f"https://www.kanopy.com/kapi/videos/{Kanopy_ID}",
@@ -42,7 +43,7 @@ for video in lists:
     video_id = video["video"]["videoId"]
     title = video["video"]["title"].replace("/", " ")
 
-    if os.path.exists(title + ".mp4"):
+    if os.path.exists("output/" + title + ".mp4"):
         continue
 
     Header.json_data["videoId"] = video_id
@@ -85,39 +86,31 @@ for video in lists:
 
         page = requests.get(MPD, headers={"User-Agent": "KAIOS/2.0"}).text
         pssh = re.findall(r"<cenc:pssh>(.*?)</cenc:pssh>", str(page))[1]
-        print("\nPSSHL: " + pssh)
+        print("\nPSSH: " + pssh)
 
     def do_decrypt(pssh, licurl):
         try:
-            header = (
-                "{'license': 'https://kcms.kanopy.com/api/v1/playback/widevine_license', 'Klicenseid': '"
-                + drmLicenseId
-                + "'}"
-            )
+            headers = {
+                "license": "https://kcms.kanopy.com/api/v1/playback/widevine_license",
+                "Klicenseid": drmLicenseId,
+            }
             licenseurl = "https://kcms.kanopy.com/api/v1/playback/widevine_license"
         except:
-            header = (
-                "{'license': '"
-                + "https://wv-keyos.licensekeyserver.com/"
-                + "', 'customdata': '"
-                + customdata
-                + "'}"
-            )
+            headers = {
+                "license": "https://wv-keyos.licensekeyserver.com/",
+                "customdata": customdata,
+            }
             licenseurl = "https://wv-keyos.licensekeyserver.com/"
 
         json_data = {
-            "PSSH": pssh,
-            "License URL": licenseurl,
-            "Headers": header,
-            "JSON": "{}",
-            "Cookies": "{}",
-            "Data": "{}",
-            "Proxy": "",
+            "pssh": pssh,
+            "licurl": licenseurl,
+            "headers": str(headers),
         }
 
-        return requests.post("https://cdrm-project.com/", json=json_data).json()[
-            "Message"
-        ]
+        return requests.post(
+            "https://cdrm-project.com/api/decrypt", json=json_data
+        ).json()["message"]
 
     if drm:
         KEYS = do_decrypt(pssh=pssh, licurl=licurl)
@@ -125,8 +118,7 @@ for video in lists:
     print("Downloading...")
 
     subprocess.call(["yt-dlp", "--allow-unplayable-formats", MPD])
-    if not os.path.exists("output"):
-        os.mkdir("output")
+
     if drm:
         shutil.move(glob.glob("*.mp4")[0], "Input.mp4")
         shutil.move(glob.glob("*.m4a")[0], "Input.m4a")
@@ -160,11 +152,10 @@ for video in lists:
                 title + ".mp4",
             ]
         )
-    else:
-        shutil.move(glob.glob("*.mp4")[0], "output/" + title + ".mp4")
 
-    if drm:
         os.remove("Input.mp4")
         os.remove("Input.m4a")
         os.remove("Output.mp4")
         os.remove("Output.m4a")
+
+    shutil.move(glob.glob("*.mp4")[0], "output/" + title + ".mp4")
