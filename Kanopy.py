@@ -5,6 +5,8 @@ from colorama import init as clr_init
 import subprocess
 import Header
 import os
+import unicodedata
+import re
 import sys
 import glob
 
@@ -21,6 +23,14 @@ response = requests.get(
     cookies=Header.cookies,
     headers=Header.headers,
 )
+
+
+def slugify(value, allow_unicode=False):
+    value = str(value)
+    value = unicodedata.normalize("NFKC", value)
+    value = re.sub(r"[^\w\s-]", "", value.lower())
+    return re.sub(r"[-\s]+", "-", value).strip("-_")
+
 
 try:
     lists = response.json()["list"]
@@ -161,4 +171,4 @@ for video in lists:
     if not os.path.exists("output"):
         os.mkdir("output")
 
-    shutil.move(glob.glob("*.mp4")[0], "output/" + title + ".mp4")
+    shutil.move(glob.glob("*.mp4")[0], "output/" + slugify(title) + ".mp4")
