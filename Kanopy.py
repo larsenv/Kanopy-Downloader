@@ -158,4 +158,7 @@ for video in lists:
         os.remove("Output.mp4")
         os.remove("Output.m4a")
 
+    if not os.path.exists("output"):
+        os.mkdir("output")
+
     shutil.move(glob.glob("*.mp4")[0], "output/" + title + ".mp4")
