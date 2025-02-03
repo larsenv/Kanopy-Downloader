@@ -25,7 +25,7 @@ response = requests.get(
 )
 
 
-def slugify(value, allow_unicode=False):
+def slugify(value):
     value = str(value)
     value = unicodedata.normalize("NFKC", value)
     value = re.sub(r"[^\w\s-]", "", value.lower())
@@ -51,7 +51,10 @@ except:
 
 for video in lists:
     video_id = video["video"]["videoId"]
-    title = video["video"]["title"].replace("/", " ")
+    title = slugify(video["video"]["title"].replace("/", " "))
+
+    if not os.path.exists("output"):
+        os.mkdir("output")
 
     if os.path.exists("output/" + title + ".mp4"):
         continue
@@ -159,7 +162,7 @@ for video in lists:
                 "Output.m4a",
                 "-c",
                 "copy",
-                title + ".mp4",
+                "output/" + title + ".mp4",
             ]
         )
 
@@ -168,7 +171,5 @@ for video in lists:
         os.remove("Output.mp4")
         os.remove("Output.m4a")
 
-    if not os.path.exists("output"):
-        os.mkdir("output")
-
-    shutil.move(glob.glob("*.mp4")[0], "output/" + slugify(title) + ".mp4")
+    else:
+        shutil.move(glob.glob("*.mp4")[0], "output/" + slugify(title) + ".mp4")
