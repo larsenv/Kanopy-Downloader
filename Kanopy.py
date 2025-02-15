@@ -12,8 +12,10 @@ import glob
 
 clr_init(autoreset=True)
 
-video_url = sys.argv[1]
-Kanopy_ID = "/".join(video_url.split("/")[:7]).split("/")[-1]
+try:
+    Kanopy_ID = sys.argv[1].split("/")[6]
+except:
+    Kanopy_ID = sys.argv[1]
 
 params = {"domainId": Header.json_data["domainId"]}
 
