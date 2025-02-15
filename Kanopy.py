@@ -13,9 +13,12 @@ import glob
 clr_init(autoreset=True)
 
 try:
-    Kanopy_ID = sys.argv[1].split("/")[6]
+    Kanopy_ID = video_url.split("/")[6]
+
+    if not Kanopy_ID.isnumeric():
+        Kanopy_ID = video_url.split("/")[7]
 except:
-    Kanopy_ID = sys.argv[1]
+    Kanopy_ID = video_url
 
 params = {"domainId": Header.json_data["domainId"]}
 
