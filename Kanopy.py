@@ -10,6 +10,9 @@ import re
 import sys
 import glob
 
+# sys.argv[0] is the script name, sys.argv[1] is the first argument (the URL)
+video_url = sys.argv[1]
+
 clr_init(autoreset=True)
 
 try:
@@ -178,3 +181,4 @@ for video in lists:
 
     else:
         shutil.move(glob.glob("*.mp4")[0], "output/" + slugify(title) + ".mp4")
+
